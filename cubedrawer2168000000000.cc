@@ -8,6 +8,7 @@
  *  TODO: Sphere
  *  TODO: DONE: Depth testing / Ordering
  *  TODO: DONE: Focus
+ *  TODO: DONE: Fulscreen
  * 
  *  TODO: Lighting and shading
  * 
@@ -1274,9 +1275,9 @@ private:
     std::chrono::time_point<std::chrono::system_clock> now;
 public:
     bool framebufferResized = false;
-    bool hasFocus = true;
-
+    bool hasFocus = true, fullscreen = false;
     Camera camera = {glm::vec3(-1.0f, -1.0f, 0.8f), glm::vec3(4.0f, 0.0f, 0.0f)};
+    std::chrono::time_point<std::chrono::system_clock> keyTimeOut = std::chrono::high_resolution_clock::now();
     bool pause_time = true;
 };
 
@@ -1316,13 +1317,27 @@ static void key_callback(GLFWwindow *window, int key, int scancode, int action, 
     // printf("\r                 \r");
     // printf("pos: %f, %f, %f", app->camera.pos.x, app->camera.pos.y, app->camera.pos.z);
     // fflush(stdout);
+    const GLFWvidmode *mode;
     switch(key){
         case GLFW_KEY_ESCAPE: 
-            // glfwSetWindowShouldClose(window, true);
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
             app->hasFocus = false;
             break;
+        case GLFW_KEY_F1:
+            glfwSetWindowShouldClose(window, true);
+            break;
         case GLFW_KEY_F11:
+            if(app->keyTimeOut > std::chrono::high_resolution_clock::now()) break;
+            mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+            app->fullscreen = !app->fullscreen;
+            if(app->fullscreen){
+                glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), 0, 0, mode->width, mode->height, GLFW_DONT_CARE);
+            }else{
+                glfwSetWindowMonitor(window, NULL, 100, 100, WIDTH, HEIGHT, GLFW_DONT_CARE);
+                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+                app->hasFocus = false;
+            }
+            app->keyTimeOut = std::chrono::high_resolution_clock::now() + std::chrono::milliseconds(250);
             break;
         case GLFW_KEY_1: app->pause_time = false; break;
         case GLFW_KEY_2: app->pause_time = true; break;
