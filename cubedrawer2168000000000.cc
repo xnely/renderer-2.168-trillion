@@ -36,12 +36,14 @@
 #include <fstream>
 #include <array>
 #include <chrono>
+#include <vector>
 
 /** Declarations */
 static std::vector<char> readFile(const std::string& filename);
 static void framebufferResizeCallback(GLFWwindow* window, int width, int height);
 static void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
 static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos);
+static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 
 struct QueueFamilyIndices{
     uint32_t graphicsFamily;
@@ -161,6 +163,7 @@ private:
             glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
         glfwSetCursorPos(window, 0, 0);
         glfwSetCursorPosCallback(window, cursor_position_callback);
+        glfwSetMouseButtonCallback(window, mouse_button_callback);
     }
     void initVulkan(){
         createInstance();
@@ -1315,7 +1318,7 @@ static void key_callback(GLFWwindow *window, int key, int scancode, int action, 
     switch(key){
         case GLFW_KEY_ESCAPE: glfwSetWindowShouldClose(window, true); break;
         case GLFW_KEY_F11:
-            
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
             break;
         case GLFW_KEY_1: app->pause_time = false; break;
         case GLFW_KEY_2: app->pause_time = true; break;
@@ -1330,4 +1333,9 @@ static void cursor_position_callback(GLFWwindow* window, double xpos, double ypo
     app->camera.lookDirection = glm::rotate(app->camera.lookDirection, (float)ypos * -0.001f, glm::cross(app->camera.lookDirection, glm::vec3(0, 0, 1)));
     
     glfwSetCursorPos(window, 0, 0);
+}
+static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods){
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS){
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    }
 }
