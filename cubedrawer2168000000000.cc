@@ -7,7 +7,7 @@
  *  TODO: DONE: Orthographic projection
  *  TODO: Sphere
  *  TODO: DONE: Depth testing / Ordering
- *  TODO: Focus
+ *  TODO: DONE: Focus
  * 
  *  TODO: Lighting and shading
  * 
@@ -1274,6 +1274,7 @@ private:
     std::chrono::time_point<std::chrono::system_clock> now;
 public:
     bool framebufferResized = false;
+    bool hasFocus = true;
 
     Camera camera = {glm::vec3(-1.0f, -1.0f, 0.8f), glm::vec3(4.0f, 0.0f, 0.0f)};
     bool pause_time = true;
@@ -1316,9 +1317,12 @@ static void key_callback(GLFWwindow *window, int key, int scancode, int action, 
     // printf("pos: %f, %f, %f", app->camera.pos.x, app->camera.pos.y, app->camera.pos.z);
     // fflush(stdout);
     switch(key){
-        case GLFW_KEY_ESCAPE: glfwSetWindowShouldClose(window, true); break;
-        case GLFW_KEY_F11:
+        case GLFW_KEY_ESCAPE: 
+            // glfwSetWindowShouldClose(window, true);
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            app->hasFocus = false;
+            break;
+        case GLFW_KEY_F11:
             break;
         case GLFW_KEY_1: app->pause_time = false; break;
         case GLFW_KEY_2: app->pause_time = true; break;
@@ -1326,16 +1330,24 @@ static void key_callback(GLFWwindow *window, int key, int scancode, int action, 
 }
 static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos){
     CubeApp *app = reinterpret_cast<CubeApp*>(glfwGetWindowUserPointer(window));
+
+    if(!app->hasFocus) return;
+
     printf("\r                 \r");
     printf("lookDirection: %lf %lf %f", app->camera.lookDirection.x, app->camera.lookDirection.y, app->camera.lookDirection.z);
     fflush(stdout);
+
     app->camera.lookDirection = glm::rotateZ(app->camera.lookDirection, (float)xpos * -0.001f);
     app->camera.lookDirection = glm::rotate(app->camera.lookDirection, (float)ypos * -0.001f, glm::cross(app->camera.lookDirection, glm::vec3(0, 0, 1)));
     
     glfwSetCursorPos(window, 0, 0);
 }
 static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods){
+    CubeApp *app = reinterpret_cast<CubeApp*>(glfwGetWindowUserPointer(window));
+
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS){
+        glfwSetCursorPos(window, 0, 0);
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        app->hasFocus = true;
     }
 }
