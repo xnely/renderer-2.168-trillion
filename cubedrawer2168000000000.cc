@@ -5,15 +5,19 @@
 /** TODO: ASSIGNMENT:
  * 
  *  TODO: DONE: Orthographic projection
- *  TODO: Sphere
+ *  TODO: DONE: Sphere
  *  TODO: DONE: Depth testing / Ordering
  *  TODO: DONE: Focus
- *  TODO: DONE: Fulscreen
+ *  TODO: DONE: Fullscreen
  * 
- *  TODO: Lighting and shading
+ *  TODO: KINDOF: Lighting and shading
  * 
  *  CHECK: atan2()
  * */
+
+/** 
+ * TODO: Dont allow looking straight up/down
+*/
 
 #define NDEBUG
 
@@ -45,6 +49,8 @@ static void framebufferResizeCallback(GLFWwindow* window, int width, int height)
 static void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
 static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos);
 static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
+
+static void generateSphere();
 
 struct QueueFamilyIndices{
     uint32_t graphicsFamily;
@@ -103,24 +109,16 @@ const char* deviceExtensions[] = {
 const std::vector<const char*> validationLayers = {
     "VK_LAYER_KHRONOS_validation"
 };
-// const std::vector<Vertex> vertices = {
-//     {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}},
-//     {{ 0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
-//     {{ 0.5f,  0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}},
-//     {{-0.5f,  0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}}
-// };
-// const std::vector<uint16_t> indices = {
-//     0, 1, 2, 2, 3, 0
-// };
-const std::vector<Vertex> vertices = {
-    {{-0.5f, -0.5f,  0.5f}, {1.0f, 0.0f, 1.0f}},
-    {{ 0.5f, -0.5f,  0.5f}, {1.0f, 0.0f, 1.0f}},
-    {{ 0.5f,  0.5f,  0.5f}, {1.0f, 0.0f, 1.0f}},
-    {{-0.5f,  0.5f,  0.5f}, {1.0f, 0.0f, 1.0f}},
-    {{-0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
-    {{ 0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
-    {{ 0.5f,  0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
-    {{-0.5f,  0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+
+std::vector<Vertex> vertices = {
+    {{-0.5f, -0.5f,  0.5f + 2.f}, {1.0f, 0.0f, 1.0f}},
+    {{ 0.5f, -0.5f,  0.5f + 2.f}, {1.0f, 0.0f, 1.0f}},
+    {{ 0.5f,  0.5f,  0.5f + 2.f}, {1.0f, 0.0f, 1.0f}},
+    {{-0.5f,  0.5f,  0.5f + 2.f}, {1.0f, 0.0f, 1.0f}},
+    {{-0.5f, -0.5f, -0.5f + 2.f}, {0.0f, 1.0f, 0.0f}},
+    {{ 0.5f, -0.5f, -0.5f + 2.f}, {0.0f, 1.0f, 0.0f}},
+    {{ 0.5f,  0.5f, -0.5f + 2.f}, {0.0f, 1.0f, 0.0f}},
+    {{-0.5f,  0.5f, -0.5f + 2.f}, {0.0f, 1.0f, 0.0f}},
 
     {{-0.5f + 5.0f, -0.5f,  0.5f}, {1.0f, 0.0f, 1.0f}},
     {{ 0.5f + 5.0f, -0.5f,  0.5f}, {1.0f, 0.0f, 1.0f}},
@@ -131,7 +129,7 @@ const std::vector<Vertex> vertices = {
     {{ 0.5f + 5.0f,  0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
     {{-0.5f + 5.0f,  0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}}
 };
-const std::vector<uint16_t> indices = {
+std::vector<uint16_t> indices = {
     0, 1, 2, 2, 3, 0, 0, 3, 4, 4, 3, 7, 7, 3, 2, 2, 6, 7, 6, 2, 1, 1, 5, 6, 5, 1, 0, 0, 4, 5, 4, 7, 6, 6, 5, 4,
     8, 9, 10, 10, 11, 8, 8, 11, 12, 12, 11, 15, 15, 11, 10, 10, 14, 15, 14, 10, 9, 9, 13, 14, 13, 9, 8, 8, 12, 13, 12, 15, 14, 14, 13, 12
 };
@@ -877,26 +875,6 @@ private:
         }
 
         vkBindBufferMemory(device, buffer, bufferMemory, 0);
-        // VkBufferCreateInfo bufferInfo{};
-        // bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        // bufferInfo.size = sizeof(vertices[0]) * vertices.size();
-        // bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-        // bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-        // if(vkCreateBuffer(device, &bufferInfo, nullptr, &vertexBuffer) != VK_SUCCESS){
-        //     throw std::runtime_error("failed to create vertex buffer");
-        // }
-
-        // VkMemoryRequirements memRequirements;
-        // vkGetBufferMemoryRequirements(device, vertexBuffer, &memRequirements);
-
-        // VkMemoryAllocateInfo allocInfo{};
-        // allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        // allocInfo.allocationSize = memRequirements.size;
-        // allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-        // if (vkAllocateMemory(device, &allocInfo, nullptr, &vertexBufferMemory) != VK_SUCCESS) {
-        //     throw std::runtime_error("failed to allocate vertex buffer memory!");
-        // }
-        // vkBindBufferMemory(device, vertexBuffer, vertexBufferMemory, 0);
     }
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) {
         VkCommandBufferAllocateInfo allocInfo{};
@@ -972,7 +950,7 @@ private:
         std::array<VkClearValue, 2> clearValues{};
         clearValues[0].color = {{0.0f, 0.0f, 0.0f, 1.0f}};
         clearValues[1].depthStencil = {1.0f, 0};
-        VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
+        // VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
         renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
         renderPassInfo.pClearValues = clearValues.data();
 
@@ -1282,6 +1260,7 @@ public:
 };
 
 int main(){
+    generateSphere();
     CubeApp app;
 
     try{
@@ -1365,4 +1344,66 @@ static void mouse_button_callback(GLFWwindow* window, int button, int action, in
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         app->hasFocus = true;
     }
+}
+
+/** TODO: DELETE: Gensphere */
+/** Generate a sphere and put it in the verticies/indices */
+static void generateSphere(){
+    const float verticalRes = .01, horizontalRes = .01;
+    const float posX = 0.f, posY = 0.f, radius = .5;
+    std::vector<Vertex> vert;
+    vert.reserve(2 + ((radius*2/verticalRes)-2)*((radius*4/horizontalRes)-2));
+    std::vector<uint16_t> idx;
+    idx.reserve(vert.size() * 3); /** TODO: Size is almost definantly wrong */
+
+    int vertSize = vertices.size();
+    int vertCount = 1;
+
+    float ambient = .01f;
+
+    // Gen verticies
+    vert.push_back({{0.f, 0.f, -radius}, {ambient, ambient, ambient}});
+    for(float i=-radius + verticalRes; i<radius - verticalRes; i+=verticalRes){
+        for(float j=-radius + horizontalRes; j<radius; j+=horizontalRes){
+            // float color = (glm::dot(glm::normalize(glm::vec3(0, 0, 1)), glm::normalize(glm::vec3(cos(M_PI*((j+radius)/radius))*radius*pow(sin(M_PI*((i+radius)/(radius*2))), .5), sin(M_PI*((j+radius)/radius))*radius*pow(sin(M_PI*((i+radius)/(radius*2))), .5),  i)))+1.f)/2.f;
+            // float color = glm::length(glm::cross(glm::normalize(glm::vec3(0, 0, 1)), glm::normalize(glm::vec3(glm::vec3(cos(M_PI*((j+radius)/radius))*radius*pow(sin(M_PI*((i+radius)/(radius*2))), .5), sin(M_PI*((j+radius)/radius))*radius*pow(sin(M_PI*((i+radius)/(radius*2))), .5),  i)))));
+            float color = std::max(ambient, glm::dot(glm::normalize(glm::vec3(0, 0, 1)), glm::normalize(glm::vec3(cos(M_PI*((j+radius)/radius))*radius*pow(sin(M_PI*((i+radius)/(radius*2))), .5), sin(M_PI*((j+radius)/radius))*radius*pow(sin(M_PI*((i+radius)/(radius*2))), .5),  i))));
+            vert.push_back({{cos(M_PI*((j+radius)/radius))*radius*pow(sin(M_PI*((i+radius)/(radius*2))), .5), sin(M_PI*((j+radius)/radius))*radius*pow(sin(M_PI*((i+radius)/(radius*2))), .5),  i}, {color, color, color}});
+            ++vertCount;
+        }
+    }
+    vert.push_back({{0.f, 0.f, radius}, {1.f, 1.f, 1.f}});
+    ++vertCount;
+
+    /** TODO: */
+    // Gen indices
+
+    // Bottom hat
+    for(int i = 1; i < 1 + 2*(radius/horizontalRes); ++i){
+        idx.push_back(vertSize);
+        idx.push_back(vertSize + (i+1)*(i != 2*(radius/horizontalRes)) + (i == 2*(radius/horizontalRes)));
+        idx.push_back(vertSize + i);
+    }
+
+    // Middle
+    for(int i = 1; i < vertCount - 2*(radius/horizontalRes); ++i){
+        idx.push_back(vertSize + i);
+        idx.push_back(vertSize + (i+1)*(i != 2*(radius/horizontalRes)) + (i == 2*(radius/horizontalRes)));
+        idx.push_back(vertSize + i + (2*radius/horizontalRes));
+
+        idx.push_back(vertSize + i + (2*radius/horizontalRes));
+        idx.push_back(vertSize + (i+1)*(i != 2*(radius/horizontalRes)) + (i == 2*(radius/horizontalRes)));
+        idx.push_back(vertSize + i + 1 + (2*radius/horizontalRes));
+    }
+
+
+    // Top hat
+    for(int i = 1; i < 1 + 2*(radius/horizontalRes); ++i){
+        idx.push_back(vertSize + vertCount - 1);
+        idx.push_back(vertSize + vertCount - (i+2)*(i != 2*(radius/horizontalRes)) - 2*(i == 2*(radius/horizontalRes)));
+        idx.push_back(vertSize + vertCount - i - 1);
+    }
+
+    vertices.insert(vertices.end(), vert.begin(), vert.end());
+    indices.insert(indices.end(), idx.begin(), idx.end());
 }
