@@ -1,22 +1,15 @@
-/** Cube Drawer 2.168 Trillion
- * Draws a cube.
+/** Renderer 2.168 Trillion
+ * Renders stuff.
  */
 
-/** TODO: ASSIGNMENT:
+/** ASSIGNMENT:
+ *  TODO: Dont allow looking straight up/down
+ *  TODO: Load models
+ *  TODO: Add Vertex attribute: Normal
+ *  TODO: blinn-phong lighting (shaders)
  * 
- *  TODO: DONE: Orthographic projection
- *  TODO: DONE: Sphere
- *  TODO: DONE: Depth testing / Ordering
- *  TODO: DONE: Focus
- *  TODO: DONE: Fullscreen
- * 
- *  TODO: KINDOF: Lighting and shading
- * 
- *  CHECK: atan2()
- * */
-
-/** 
- * TODO: Dont allow looking straight up/down
+ *  Lighting should be generalized, using
+ *   normals calculated from model.
 */
 
 #define NDEBUG
@@ -1346,8 +1339,7 @@ static void mouse_button_callback(GLFWwindow* window, int button, int action, in
     }
 }
 
-/** TODO: DELETE: Gensphere */
-/** Generate a sphere and put it in the verticies/indices */
+
 static void generateSphere(){
     const float verticalRes = .01, horizontalRes = .01;
     const float posX = 0.f, posY = 0.f, radius = .5;
@@ -1365,8 +1357,6 @@ static void generateSphere(){
     vert.push_back({{0.f, 0.f, -radius}, {ambient, ambient, ambient}});
     for(float i=-radius + verticalRes; i<radius - verticalRes; i+=verticalRes){
         for(float j=-radius + horizontalRes; j<radius; j+=horizontalRes){
-            // float color = (glm::dot(glm::normalize(glm::vec3(0, 0, 1)), glm::normalize(glm::vec3(cos(M_PI*((j+radius)/radius))*radius*pow(sin(M_PI*((i+radius)/(radius*2))), .5), sin(M_PI*((j+radius)/radius))*radius*pow(sin(M_PI*((i+radius)/(radius*2))), .5),  i)))+1.f)/2.f;
-            // float color = glm::length(glm::cross(glm::normalize(glm::vec3(0, 0, 1)), glm::normalize(glm::vec3(glm::vec3(cos(M_PI*((j+radius)/radius))*radius*pow(sin(M_PI*((i+radius)/(radius*2))), .5), sin(M_PI*((j+radius)/radius))*radius*pow(sin(M_PI*((i+radius)/(radius*2))), .5),  i)))));
             float color = std::max(ambient, glm::dot(glm::normalize(glm::vec3(0, 0, 1)), glm::normalize(glm::vec3(cos(M_PI*((j+radius)/radius))*radius*pow(sin(M_PI*((i+radius)/(radius*2))), .5), sin(M_PI*((j+radius)/radius))*radius*pow(sin(M_PI*((i+radius)/(radius*2))), .5),  i))));
             vert.push_back({{cos(M_PI*((j+radius)/radius))*radius*pow(sin(M_PI*((i+radius)/(radius*2))), .5), sin(M_PI*((j+radius)/radius))*radius*pow(sin(M_PI*((i+radius)/(radius*2))), .5),  i}, {color, color, color}});
             ++vertCount;
@@ -1375,7 +1365,6 @@ static void generateSphere(){
     vert.push_back({{0.f, 0.f, radius}, {1.f, 1.f, 1.f}});
     ++vertCount;
 
-    /** TODO: */
     // Gen indices
 
     // Bottom hat
