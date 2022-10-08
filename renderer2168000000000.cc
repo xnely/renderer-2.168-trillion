@@ -3,7 +3,7 @@
  */
 
 /** ASSIGNMENT:
- *  TODO: Dont allow looking straight up/down
+ *  TODO: DONE: Dont allow looking straight up/down
  *  TODO: Load models
  *  TODO: Add Vertex attribute: Normal
  *  TODO: blinn-phong lighting (shaders)
@@ -1325,7 +1325,9 @@ static void cursor_position_callback(GLFWwindow* window, double xpos, double ypo
     fflush(stdout);
 
     app->camera.lookDirection = glm::rotateZ(app->camera.lookDirection, (float)xpos * -0.001f);
-    app->camera.lookDirection = glm::rotate(app->camera.lookDirection, (float)ypos * -0.001f, glm::cross(app->camera.lookDirection, glm::vec3(0, 0, 1)));
+    app->camera.lookDirection = glm::rotate(app->camera.lookDirection,
+     (float)ypos * -0.001f * ((float)ypos < 0 || app->camera.lookDirection.z > -1.624) * ((float)ypos > 0 || app->camera.lookDirection.z < 1.624),  /** TODO: prevent looking down without this hack */
+     glm::cross(app->camera.lookDirection, glm::vec3(0, 0, 1)));
     
     glfwSetCursorPos(window, 0, 0);
 }
