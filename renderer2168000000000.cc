@@ -123,8 +123,11 @@ std::vector<Vertex> vertices = {
     {{-0.5f + 5.0f,  0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}}
 };
 std::vector<uint16_t> indices = {
-    0, 1, 2, 2, 3, 0, 0, 3, 4, 4, 3, 7, 7, 3, 2, 2, 6, 7, 6, 2, 1, 1, 5, 6, 5, 1, 0, 0, 4, 5, 4, 7, 6, 6, 5, 4,
-    8, 9, 10, 10, 11, 8, 8, 11, 12, 12, 11, 15, 15, 11, 10, 10, 14, 15, 14, 10, 9, 9, 13, 14, 13, 9, 8, 8, 12, 13, 12, 15, 14, 14, 13, 12
+    0, 1, 2, 2, 3, 0, 0, 3, 4, 4, 3, 7, 7, 3, 2, 2, 6,
+     7, 6, 2, 1, 1, 5, 6, 5, 1, 0, 0, 4, 5, 4, 7, 6, 6, 5, 4,
+    
+    8, 9, 10, 10, 11, 8, 8, 11, 12, 12, 11, 15, 15, 11, 10, 10, 14,
+     15, 14, 10, 9, 9, 13, 14, 13, 9, 8, 8, 12, 13, 12, 15, 14, 14, 13, 12
 };
 
 #ifdef NDEBUG
@@ -1342,7 +1345,8 @@ static void mouse_button_callback(GLFWwindow* window, int button, int action, in
 
 static void generateSphere(){
     const float verticalRes = .01, horizontalRes = .01;
-    const float posX = 0.f, posY = 0.f, radius = .5;
+    // const float posX = 0.f, posY = 0.f;
+    const float radius = .5;
     std::vector<Vertex> vert;
     vert.reserve(2 + ((radius*2/verticalRes)-2)*((radius*4/horizontalRes)-2));
     std::vector<uint16_t> idx;
