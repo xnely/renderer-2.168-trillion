@@ -6,11 +6,12 @@
  *  TODO: DONE: Dont allow looking straight up/down
  *  TODO: DONE: Load textures
  *  TODO: DONE: Load models
- *  TODO: Add Vertex attribute: Normal
+ *  TODO: DONE: Add Vertex attribute: Normal
+ *  TODO: DONE: diffuse lighting
  *  TODO: blinn-phong lighting (shaders)
  * 
  *  Lighting should be generalized, using
- *   normals calculated from model.
+ *   normals from model.
 */
 
 /** TODO: DEBUG: Model does not seem to load correctly (missing triangles) */
@@ -72,6 +73,7 @@ struct Vertex{
     glm::vec3 pos;
     glm::vec3 color;
     glm::vec2 texCoord;
+    glm::vec3 normal;
 
     static VkVertexInputBindingDescription getBindingDescription(){
         VkVertexInputBindingDescription bindingDescription{};
@@ -80,8 +82,8 @@ struct Vertex{
         bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
         return bindingDescription;
     }
-    static std::array<VkVertexInputAttributeDescription, 3> getAttributeDescriptions() {
-        std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions{};
+    static std::array<VkVertexInputAttributeDescription, 4> getAttributeDescriptions() {
+        std::array<VkVertexInputAttributeDescription, 4> attributeDescriptions{};
         attributeDescriptions[0].binding = 0;
         attributeDescriptions[0].location = 0;
         attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
@@ -96,6 +98,11 @@ struct Vertex{
         attributeDescriptions[2].location = 2;
         attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
         attributeDescriptions[2].offset = offsetof(Vertex, texCoord);
+
+        attributeDescriptions[3].binding = 0;
+        attributeDescriptions[3].location = 3;
+        attributeDescriptions[3].format = VK_FORMAT_R32G32B32_SFLOAT;
+        attributeDescriptions[3].offset = offsetof(Vertex, normal);
 
         return attributeDescriptions;
     }
@@ -116,6 +123,9 @@ struct UniformBufferObject {
     glm::mat4 model;
     glm::mat4 view;
     glm::mat4 proj;
+
+    glm::vec3 diffuseLightDirection;
+    float ambient;
 };
 struct Camera{
     glm::vec3 lookDirection;
@@ -548,7 +558,7 @@ private:
         VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
         vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
         VkVertexInputBindingDescription bindingDescription = Vertex::getBindingDescription();
-        std::array<VkVertexInputAttributeDescription, 3UL> attributeDescriptions = Vertex::getAttributeDescriptions();
+        std::array<VkVertexInputAttributeDescription, 4UL> attributeDescriptions = Vertex::getAttributeDescriptions();
         vertexInputInfo.vertexBindingDescriptionCount = 1;
         vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
         vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
@@ -1328,6 +1338,9 @@ private:
         // ubo.proj = glm::ortho(0.f, 4.f, 0.f, 4.f, -10.f, 10.f);
         ubo.proj[1][1] *= -1; // Flip Y bc GLM is designed for OpenGL
 
+        ubo.diffuseLightDirection = glm::vec3(0.0, 1.0, 1.0);
+        ubo.ambient = 0.1f * toggleKey_1 + 1.f * !toggleKey_1;
+
         void* data;
         vkMapMemory(device, uniformBuffersMemory[currentImage], 0, sizeof(ubo), 0, &data);
         memcpy(data, &ubo, sizeof(ubo));
@@ -1429,6 +1442,12 @@ private:
                     1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
                 };
 
+                vertex.normal = {
+                    attrib.normals[3 * index.normal_index + 0],
+                    attrib.normals[3 * index.normal_index + 1],
+                    attrib.normals[3 * index.normal_index + 2]
+                };
+
                 vertex.color = {1.0f, 1.0f, 1.0f};
 
                 if(uniqueVertices.count(vertex) == 0){
@@ -1524,6 +1543,8 @@ public:
     Camera camera = {glm::vec3(-1.0f, -1.0f, 0.8f), glm::vec3(4.0f, 0.0f, 0.0f)};
     std::chrono::time_point<std::chrono::system_clock> keyTimeOut = std::chrono::high_resolution_clock::now();
     bool pause_time = true;
+    /** num keys used for debugging primarily */
+    bool toggleKey_1 = false, toggleKey_2 = false, toggleKey_3 = false;
 };
 
 int main(){
@@ -1584,8 +1605,27 @@ static void key_callback(GLFWwindow *window, int key, int scancode, int action, 
             }
             app->keyTimeOut = std::chrono::high_resolution_clock::now() + std::chrono::milliseconds(250);
             break;
-        case GLFW_KEY_1: app->pause_time = false; break;
-        case GLFW_KEY_2: app->pause_time = true; break;
+        /** TODO: Cleaner key timeout */
+        case GLFW_KEY_1:
+            if(app->keyTimeOut > std::chrono::high_resolution_clock::now()) break;
+            app->toggleKey_1 = !app->toggleKey_1;
+            app->keyTimeOut = std::chrono::high_resolution_clock::now() + std::chrono::milliseconds(250);
+            break;
+        case GLFW_KEY_2:
+            if(app->keyTimeOut > std::chrono::high_resolution_clock::now()) break;
+            app->toggleKey_2 = !app->toggleKey_1;
+            app->keyTimeOut = std::chrono::high_resolution_clock::now() + std::chrono::milliseconds(250);
+            break;
+        case GLFW_KEY_3:
+            if(app->keyTimeOut > std::chrono::high_resolution_clock::now()) break;
+            app->toggleKey_3 = !app->toggleKey_1;
+            app->keyTimeOut = std::chrono::high_resolution_clock::now() + std::chrono::milliseconds(250);
+            break;
+        case GLFW_KEY_P:
+            if(app->keyTimeOut > std::chrono::high_resolution_clock::now()) break;
+            app->pause_time = !app->pause_time;
+            app->keyTimeOut = std::chrono::high_resolution_clock::now() + std::chrono::milliseconds(250);
+            break;
     }
 }
 static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos){
