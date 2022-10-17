@@ -27,6 +27,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/rotate_vector.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/hash.hpp>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -45,6 +47,7 @@
 #include <array>
 #include <chrono>
 #include <vector>
+#include <unordered_map>
 
 /** Declarations */
 static std::vector<char> readFile(const std::string& filename);
@@ -96,7 +99,19 @@ struct Vertex{
 
         return attributeDescriptions;
     }
+    bool operator==(const Vertex &other) const{
+        return pos == other.pos && color == other.color && texCoord == other.texCoord;
+    }
 };
+namespace std{
+    template<> struct hash<Vertex> {
+        size_t operator()(Vertex const& vertex) const{
+            return ((hash<glm::vec3>()(vertex.pos) ^
+                   (hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^
+                   (hash<glm::vec2>()(vertex.texCoord) << 1);
+        }
+    };
+}
 struct UniformBufferObject {
     glm::mat4 model;
     glm::mat4 view;
@@ -1398,6 +1413,8 @@ private:
             throw std::runtime_error(err);
         }
 
+        std::unordered_map<Vertex, uint32_t> uniqueVertices{};
+
         for (const auto& shape : shapes) {
             for (const auto& index : shape.mesh.indices) {
                 Vertex vertex{};
@@ -1414,11 +1431,15 @@ private:
 
                 vertex.color = {1.0f, 1.0f, 1.0f};
 
-                vertices.push_back(vertex);
-                indices.push_back(indices.size());
+                if(uniqueVertices.count(vertex) == 0){
+                    uniqueVertices[vertex] = static_cast<uint32_t>(vertices.size());
+                    vertices.push_back(vertex);
+                }
+                indices.push_back(uniqueVertices[vertex]);
             }
         }
         printf("model loaded\n");
+        // printf("%lu vertices\n", vertices.size());
     }
     void cleanup(){
         cleanupSwapChain();
