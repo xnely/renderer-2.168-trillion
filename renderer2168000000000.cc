@@ -5,7 +5,8 @@
 /** ASSIGNMENT:
  *  TODO: Generate terrain
  *  TODO: Specular lighting
- *  TODO: Per-fragment diffuse (blinn-phong) (toggle)
+ *  TODO: DONE: Per-fragment diffuse (toggle)
+ *  TODO: Specular (blinn-phong)
  *  
  * */
 
@@ -117,8 +118,9 @@ struct UniformBufferObject {
     glm::mat4 view;
     glm::mat4 proj;
 
-    glm::vec3 diffuseLightDirection;
+    glm::vec3 diffuseLightPosition;
     float ambient;
+    int ambientPerVertex;
 };
 struct Camera{
     glm::vec3 lookDirection;
@@ -1331,9 +1333,9 @@ private:
         // ubo.proj = glm::ortho(0.f, 4.f, 0.f, 4.f, -10.f, 10.f);
         ubo.proj[1][1] *= -1; // Flip Y bc GLM is designed for OpenGL
 
-        static float componentOneOneOne = 1/std::sqrt(3);
-        ubo.diffuseLightDirection = glm::vec3(componentOneOneOne, componentOneOneOne, componentOneOneOne);
+        ubo.diffuseLightPosition = lightPos;
         ubo.ambient = 0.1f * toggleKey_1 + 1.f * !toggleKey_1;
+        ubo.ambientPerVertex = toggleKey_4;
 
         void* data;
         vkMapMemory(device, uniformBuffersMemory[currentImage], 0, sizeof(ubo), 0, &data);
@@ -1538,7 +1540,8 @@ public:
     std::chrono::time_point<std::chrono::system_clock> keyTimeOut = std::chrono::high_resolution_clock::now();
     bool pause_time = true;
     /** num keys used for debugging primarily */
-    bool toggleKey_1 = false, toggleKey_2 = false, toggleKey_3 = false;
+    bool toggleKey_1 = false, toggleKey_2 = false, toggleKey_3 = false, toggleKey_4 = false, toggleKey_5 = false;
+    glm::vec3 lightPos = {10.f, 10.f, 10.0f};
 };
 
 int main(){
@@ -1606,13 +1609,25 @@ static void key_callback(GLFWwindow *window, int key, int scancode, int action, 
             app->keyTimeOut = std::chrono::high_resolution_clock::now() + std::chrono::milliseconds(250);
             break;
         case GLFW_KEY_2:
-            if(app->keyTimeOut > std::chrono::high_resolution_clock::now()) break;
-            app->toggleKey_2 = !app->toggleKey_1;
-            app->keyTimeOut = std::chrono::high_resolution_clock::now() + std::chrono::milliseconds(250);
+            app->lightPos += glm::vec3(0.f, -1.f, 0.f);
+            // if(app->keyTimeOut > std::chrono::high_resolution_clock::now()) break;
+            // app->toggleKey_2 = !app->toggleKey_1;
+            // app->keyTimeOut = std::chrono::high_resolution_clock::now() + std::chrono::milliseconds(250);
             break;
         case GLFW_KEY_3:
+            app->lightPos += glm::vec3(0.f, 1.f, 0.f);
+            // if(app->keyTimeOut > std::chrono::high_resolution_clock::now()) break;
+            // app->toggleKey_3 = !app->toggleKey_1;
+            // app->keyTimeOut = std::chrono::high_resolution_clock::now() + std::chrono::milliseconds(250);
+            break;
+        case GLFW_KEY_4:
             if(app->keyTimeOut > std::chrono::high_resolution_clock::now()) break;
-            app->toggleKey_3 = !app->toggleKey_1;
+            app->toggleKey_4 = !app->toggleKey_4;
+            app->keyTimeOut = std::chrono::high_resolution_clock::now() + std::chrono::milliseconds(250);
+            break;
+        case GLFW_KEY_5:
+            if(app->keyTimeOut > std::chrono::high_resolution_clock::now()) break;
+            app->toggleKey_5 = !app->toggleKey_5;
             app->keyTimeOut = std::chrono::high_resolution_clock::now() + std::chrono::milliseconds(250);
             break;
         case GLFW_KEY_P:
