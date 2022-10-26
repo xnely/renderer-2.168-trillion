@@ -3,18 +3,11 @@
  */
 
 /** ASSIGNMENT:
- *  TODO: DONE: Dont allow looking straight up/down
- *  TODO: DONE: Load textures
- *  TODO: DONE: Load models
- *  TODO: DONE: Add Vertex attribute: Normal
- *  TODO: DONE: diffuse lighting
- *  TODO: blinn-phong lighting (shaders)
- * 
- *  Lighting should be generalized, using
- *   normals from model.
-*/
-
-/** TODO: DEBUG: Model does not seem to load correctly (missing triangles) */
+ *  TODO: Generate terrain
+ *  TODO: Specular lighting
+ *  TODO: Per-fragment diffuse (blinn-phong) (toggle)
+ *  
+ * */
 
 #include <vulkan/vulkan_core.h>
 #define NDEBUG
@@ -1338,7 +1331,8 @@ private:
         // ubo.proj = glm::ortho(0.f, 4.f, 0.f, 4.f, -10.f, 10.f);
         ubo.proj[1][1] *= -1; // Flip Y bc GLM is designed for OpenGL
 
-        ubo.diffuseLightDirection = glm::vec3(0.0, 1.0, 1.0);
+        static float componentOneOneOne = 1/std::sqrt(3);
+        ubo.diffuseLightDirection = glm::vec3(componentOneOneOne, componentOneOneOne, componentOneOneOne);
         ubo.ambient = 0.1f * toggleKey_1 + 1.f * !toggleKey_1;
 
         void* data;
