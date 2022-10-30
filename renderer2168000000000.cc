@@ -4,9 +4,8 @@
 
 /** ASSIGNMENT:
  *  TODO: Generate terrain
- *  TODO: Specular lighting
+ *  TODO: Specular lighting (blinn-phong)
  *  TODO: DONE: Per-fragment diffuse (toggle)
- *  TODO: Specular (blinn-phong)
  *  
  * */
 
@@ -50,6 +49,7 @@ static void framebufferResizeCallback(GLFWwindow* window, int width, int height)
 static void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
 static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos);
 static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
+static void generateTerrain(GLFWwindow* window);
 
 // static void generateSphere();
 
@@ -219,6 +219,7 @@ private:
         createTextureImageView();
         createTextureSampler();
         loadModel(); /** TODO: load scene */
+        generateTerrain(window);
         createVertexBuffer();
         createIndexBuffer();
         createUniformBuffers();
@@ -287,7 +288,7 @@ private:
         return true;
     }
     void createLogicalDevice(){
-        QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
+        QueueFamilyIndices indices = findQueueFamilies(physicalDevice); /** WARN: indices shadow */
 
         // Initialize queue for families (maybe bad initialization method?)
         int families = 2;
@@ -1334,7 +1335,7 @@ private:
         ubo.proj[1][1] *= -1; // Flip Y bc GLM is designed for OpenGL
 
         ubo.diffuseLightPosition = lightPos;
-        ubo.ambient = 0.1f * toggleKey_1 + 1.f * !toggleKey_1;
+        ubo.ambient = 0.2f * toggleKey_1 + 1.f * !toggleKey_1;
         ubo.ambientPerVertex = toggleKey_4;
 
         void* data;
@@ -1509,10 +1510,8 @@ private:
     std::vector<VkCommandBuffer> commandBuffers;
 
     uint32_t currentFrame = 0;
-    std::vector<Vertex> vertices;
     VkBuffer vertexBuffer;
     VkDeviceMemory vertexBufferMemory;
-    std::vector<uint32_t> indices;
     VkBuffer indexBuffer;
     VkDeviceMemory indexBufferMemory;
     std::vector<VkBuffer> uniformBuffers;
@@ -1542,6 +1541,9 @@ public:
     /** num keys used for debugging primarily */
     bool toggleKey_1 = false, toggleKey_2 = false, toggleKey_3 = false, toggleKey_4 = false, toggleKey_5 = false;
     glm::vec3 lightPos = {10.f, 10.f, 10.0f};
+
+    std::vector<uint32_t> indices;
+    std::vector<Vertex> vertices;
 };
 
 int main(){
@@ -1661,6 +1663,38 @@ static void mouse_button_callback(GLFWwindow* window, int button, int action, in
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         app->hasFocus = true;
     }
+}
+
+static void generateTerrain(GLFWwindow* window){
+    CubeApp *app = reinterpret_cast<CubeApp*>(glfwGetWindowUserPointer(window));
+
+    const int width = 64;
+    std::vector<Vertex> vert;
+    vert.reserve(width*width);
+    std::vector<uint32_t> ind;
+    ind.reserve(width*width*6);
+    uint32_t indStart = app->vertices.size();
+
+    for(int i = 0; i<width; ++i){
+        for(int j = 0; j<width; ++j){
+            int random = rand();
+            vert.push_back(Vertex{glm::vec3(i-width/2, j-width/2, random/(RAND_MAX/16.f) * (1/16.f))-2.f, glm::vec3(0, random/(1.f*RAND_MAX), 0), glm::vec2(0, 0), glm::vec3(0, 0, 1)});
+        }
+    }
+    /** TODO: Calculate normals for terrain vertices (4 triangles, exclude edges)*/
+    app->vertices.insert(app->vertices.end(), vert.begin(), vert.end());
+
+    for(int i = 0; i<width-1; ++i){
+        for(int j = 0; j<width-1; ++j){
+            ind.push_back(indStart + (i+1)*width + j + 1);
+            ind.push_back(indStart + i*width + j + 1);
+            ind.push_back(indStart + i*width + j);
+            ind.push_back(indStart + i*width + j);
+            ind.push_back(indStart + (i+1)*width + j);
+            ind.push_back(indStart + (i+1)*width + j + 1);
+        }
+    }
+    app->indices.insert(app->indices.end(), ind.begin(), ind.end());
 }
 
 /** REMOVED: Now using model-based approach */
