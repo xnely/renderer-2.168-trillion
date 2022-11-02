@@ -1665,6 +1665,7 @@ static void mouse_button_callback(GLFWwindow* window, int button, int action, in
     }
 }
 
+#define IS_LOCATION(x, y) x >= 0 && y >= 0 && x < width && y < width
 static void generateTerrain(GLFWwindow* window){
     CubeApp *app = reinterpret_cast<CubeApp*>(glfwGetWindowUserPointer(window));
 
@@ -1675,13 +1676,35 @@ static void generateTerrain(GLFWwindow* window){
     ind.reserve(width*width*6);
     uint32_t indStart = app->vertices.size();
 
+    /** TODO: Add texture coordinates */
     for(int i = 0; i<width; ++i){
         for(int j = 0; j<width; ++j){
-            int random = rand();
-            vert.push_back(Vertex{glm::vec3(i-width/2, j-width/2, random/(RAND_MAX/16.f) * (1/16.f))-2.f, glm::vec3(0, random/(1.f*RAND_MAX), 0), glm::vec2(0, 0), glm::vec3(0, 0, 1)});
+            vert.push_back(Vertex{glm::vec3(i-width/2, j-width/2, rand()/(RAND_MAX/64.f) * (1/64.f))-2.f, glm::vec3(0, 1.f, 0), glm::vec2(0, 0)});
         }
     }
-    /** TODO: Calculate normals for terrain vertices (4 triangles, exclude edges)*/
+    // Calculate normals
+    int dirmap[8] = {1, 1, 1, 1, -1, -1, -1, -1};
+    for(int i = 0; i<width; ++i){
+        for(int j = 0; j<width; ++j){
+            int h = i*width+j, u = (i+1)*width+j, d = (i-1)*width+j;
+            int map[8][3] = {{h, u+1, h+1},
+                            {u+1, h, u},
+                            {d+1, h, h+1},
+                            {h, d+1, d},
+                            {d-1, h, d},
+                            {h, d-1, h-1},
+                            {h-1, u, h},
+                            {u, h-1, u-1}};
+            glm::vec3 normalAcc(0.f, 0.f, 0.f);
+            for(int k=0; k<8; ++k){
+                if(IS_LOCATION(i + dirmap[(k+2)%8], j + dirmap[k])){
+                    glm::vec3 normal = glm::cross(vert[map[k][0]].pos - vert[map[k][1]].pos, vert[map[k][1]].pos - vert[map[k][2]].pos);
+                    normalAcc += normal;
+                }
+            }
+            vert[h].normal = glm::normalize(normalAcc);
+        }
+    }
     app->vertices.insert(app->vertices.end(), vert.begin(), vert.end());
 
     for(int i = 0; i<width-1; ++i){
