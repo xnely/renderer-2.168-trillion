@@ -1264,8 +1264,8 @@ private:
         if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) camera.pos = camera.pos - 2.0f * delta * camera.lookDirection;
         if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) camera.pos = camera.pos - 2.0f * delta * glm::normalize(glm::cross(camera.lookDirection, glm::vec3(0, 0, 1)));
         if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) camera.pos = camera.pos + 2.0f * delta * glm::normalize(glm::cross(camera.lookDirection, glm::vec3(0, 0, 1)));
-        if(glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) camera.pos = camera.pos - 1.0f * delta * glm::normalize(glm::cross(camera.pos, glm::cross(camera.lookDirection, glm::vec3(0, 0, 1))));
-        if(glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) camera.pos = camera.pos + 1.0f * delta * glm::normalize(glm::cross(camera.pos, glm::cross(camera.lookDirection, glm::vec3(0, 0, 1))));
+        if(glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) camera.pos = camera.pos + 1.0f * delta * glm::normalize(glm::cross(camera.lookDirection, glm::cross(camera.lookDirection, glm::vec3(0, 0, 1))));
+        if(glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) camera.pos = camera.pos - 1.0f * delta * glm::normalize(glm::cross(camera.lookDirection, glm::cross(camera.lookDirection, glm::vec3(0, 0, 1))));
 
         lastTick = std::chrono::high_resolution_clock::now();
     }
