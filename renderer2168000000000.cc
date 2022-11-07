@@ -6,6 +6,7 @@
  *  TODO: Generate terrain
  *  TODO: Specular lighting (blinn-phong)
  *  TODO: DONE: Per-fragment diffuse (toggle)
+ *  TODO: DONE: Attenuation
  *  
  * */
 
@@ -113,15 +114,19 @@ namespace std{
         }
     };
 }
+#pragma pack(push, 1)
 struct UniformBufferObject {
     glm::mat4 model;
     glm::mat4 view;
     glm::mat4 proj;
 
-    glm::vec3 diffuseLightPosition;
+    glm::vec4 diffuseLightPosition;
+    glm::vec4 eyeDir;
     float ambient;
     int ambientPerVertex;
+    int specular;
 };
+#pragma pack(pop)
 struct Camera{
     glm::vec3 lookDirection;
     glm::vec3 pos;
@@ -1334,9 +1339,12 @@ private:
         // ubo.proj = glm::ortho(0.f, 4.f, 0.f, 4.f, -10.f, 10.f);
         ubo.proj[1][1] *= -1; // Flip Y bc GLM is designed for OpenGL
 
-        ubo.diffuseLightPosition = lightPos;
+        ubo.diffuseLightPosition = glm::vec4(lightPos, 0);
+        ubo.eyeDir = glm::vec4(camera.pos + camera.lookDirection, 0);
+        // ubo.eyeDir = glm::vec4(camera.pos.x + camera.lookDirection.x, camera.pos.z - camera.lookDirection.y, camera.pos.y + camera.lookDirection.z, 0);
         ubo.ambient = 0.2f * toggleKey_1 + 1.f * !toggleKey_1;
         ubo.ambientPerVertex = toggleKey_4;
+        ubo.specular = toggleKey_5;
 
         void* data;
         vkMapMemory(device, uniformBuffersMemory[currentImage], 0, sizeof(ubo), 0, &data);
@@ -1535,12 +1543,12 @@ private:
 public:
     bool framebufferResized = false;
     bool hasFocus = true, fullscreen = false;
-    Camera camera = {glm::vec3(-1.0f, -1.0f, 0.8f), glm::vec3(4.0f, 0.0f, 0.0f)};
+    Camera camera = {glm::vec3(1.0f, 1.0f, -0.1f), glm::vec3(-2.0f, -1.0f, 1.0f)};
     std::chrono::time_point<std::chrono::system_clock> keyTimeOut = std::chrono::high_resolution_clock::now();
     bool pause_time = true;
     /** num keys used for debugging primarily */
     bool toggleKey_1 = false, toggleKey_2 = false, toggleKey_3 = false, toggleKey_4 = false, toggleKey_5 = false;
-    glm::vec3 lightPos = {10.f, 10.f, 10.0f};
+    glm::vec3 lightPos = {10.f, 30.f, 10.0f};
 
     std::vector<uint32_t> indices;
     std::vector<Vertex> vertices;
@@ -1742,8 +1750,7 @@ static void generateTerrain(GLFWwindow* window){
     /** TODO: Add texture coordinates */
     for(int i = 0; i<width; ++i){
         for(int j = 0; j<width; ++j){
-            // printf("%f\n", perlin2d(i, j, 0.1f, 10));
-            vert.push_back(Vertex{glm::vec3(i-width/2, j-width/2, perlin_noise::perlin2d(i, j, 0.5f, 2))-2.f, glm::vec3(0, 1.f, 0), glm::vec2(0, 0)});
+            vert.push_back(Vertex{glm::vec3(i-width/2, j-width/2, perlin_noise::perlin2d(i, j, 0.5f, 2))-2.f, glm::vec3(.68f, 2.f, .52f), glm::vec2(0.61, 0.96)});
         }
     }
     // Calculate normals
