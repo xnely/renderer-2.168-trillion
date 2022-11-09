@@ -3,11 +3,12 @@
  */
 
 /** ASSIGNMENT:
- *  TODO: Generate terrain
- *  TODO: Specular lighting (blinn-phong)
+ *  TODO: DONE: Generate terrain
+ *  TODO: DONE: Specular lighting (blinn-phong)
  *  TODO: DONE: Per-fragment diffuse (toggle)
  *  TODO: DONE: Attenuation
  *  
+ * TODO: WARN: INITIAL CAMERA POSITION IS UBO????
  * */
 
 #include <vulkan/vulkan_core.h>
@@ -18,7 +19,7 @@
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
+// #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/rotate_vector.hpp>
@@ -114,19 +115,19 @@ namespace std{
         }
     };
 }
-#pragma pack(push, 1)
-struct UniformBufferObject {
-    glm::mat4 model;
-    glm::mat4 view;
-    glm::mat4 proj;
 
-    glm::vec4 diffuseLightPosition;
-    glm::vec4 eyeDir;
-    float ambient;
-    int ambientPerVertex;
-    int specular;
+struct UniformBufferObject {
+    alignas(16) glm::mat4 model;
+    alignas(16) glm::mat4 view;
+    alignas(16) glm::mat4 proj;
+
+    alignas(16) glm::vec3 diffuseLightPosition;
+    alignas(16) glm::vec3 eyePos;
+    alignas(4) float ambient;
+    alignas(4) int ambientPerVertex;
+    alignas(4) int specular;
 };
-#pragma pack(pop)
+
 struct Camera{
     glm::vec3 lookDirection;
     glm::vec3 pos;
@@ -1339,9 +1340,9 @@ private:
         // ubo.proj = glm::ortho(0.f, 4.f, 0.f, 4.f, -10.f, 10.f);
         ubo.proj[1][1] *= -1; // Flip Y bc GLM is designed for OpenGL
 
-        ubo.diffuseLightPosition = glm::vec4(lightPos, 0);
-        ubo.eyeDir = glm::vec4(camera.pos + camera.lookDirection, 0);
-        // ubo.eyeDir = glm::vec4(camera.pos.x + camera.lookDirection.x, camera.pos.z - camera.lookDirection.y, camera.pos.y + camera.lookDirection.z, 0);
+        ubo.diffuseLightPosition = lightPos;
+        ubo.eyePos = camera.pos;
+        // ubo.eyePos = glm::vec3(camera.pos.x, -camera.pos.y, camera.pos.z);
         ubo.ambient = 0.2f * toggleKey_1 + 1.f * !toggleKey_1;
         ubo.ambientPerVertex = toggleKey_4;
         ubo.specular = toggleKey_5;
@@ -1653,7 +1654,8 @@ static void cursor_position_callback(GLFWwindow* window, double xpos, double ypo
     if(!app->hasFocus) return;
 
     printf("\r                 \r");
-    printf("lookDirection: %lf %lf %f", app->camera.lookDirection.x, app->camera.lookDirection.y, app->camera.lookDirection.z);
+    // printf("lookDirection: %lf %lf %f", app->camera.lookDirection.x, app->camera.lookDirection.y, app->camera.lookDirection.z);
+    printf("camPos: %lf %lf %f", app->camera.pos.x, app->camera.pos.y, app->camera.pos.z);
     fflush(stdout);
 
     app->camera.lookDirection = glm::rotateZ(app->camera.lookDirection, (float)xpos * -0.001f);

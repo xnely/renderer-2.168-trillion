@@ -5,8 +5,8 @@ layout(binding = 0) uniform UniformBufferObject {
     mat4 view;
     mat4 proj;
 
-    vec4 diffuseLightPosition;
-    vec4 eyeDir;
+    vec3 diffuseLightPosition;
+    vec3 eyePos;
     float ambient;
     int ambientPerVertex;
     int specular;
@@ -24,24 +24,27 @@ layout(location = 3) out vec3 normal;
 layout(location = 4) out vec3 lightVec;
 layout(location = 5) out float lightDistance;
 layout(location = 6) out vec3 outPosition;
-layout(location = 7) out vec3 eyeDir;
+layout(location = 7) out vec3 eyePos;
 layout(location = 8) out int specular;
+layout(location = 9) out vec3 lightPos;
 
 void main() {
     gl_Position = ubo.proj * ubo.view * ubo.model * vec4(inPosition, 1.0);
     fragTexCoord = inTexCoord;
+    lightPos = ubo.diffuseLightPosition;
+    eyePos = ubo.eyePos;
     if(ubo.ambientPerVertex == 1){
         fragColor = inColor;
         normal = normalize(inNormal);
-        lightVec = ubo.diffuseLightPosition.xyz - inPosition;
+        lightVec = ubo.diffuseLightPosition - inPosition;
         ambientPerVertex = 1;
         outPosition = inPosition;
-        eyeDir = normalize(inPosition - ubo.eyeDir.xyz);
+        // eyeDir = normalize(inPosition - ubo.eyePos);
         specular = ubo.specular;
     }else{
-        fragColor = inColor * max(ubo.ambient, dot(inNormal, normalize(ubo.diffuseLightPosition.xyz - inPosition)));
+        fragColor = inColor * max(ubo.ambient, dot(inNormal, normalize(ubo.diffuseLightPosition - inPosition)));
         ambientPerVertex = 0;
-        lightDistance = length(ubo.diffuseLightPosition.xyz - inPosition) * length(ubo.diffuseLightPosition.xyz - inPosition);
+        lightDistance = length(ubo.diffuseLightPosition - inPosition) * length(ubo.diffuseLightPosition - inPosition);
     }
     // normal = normalize(inNormal);
     // normal = normalize(vec3(ubo.model * ubo.view * vec4(inNormal, 0.0)));
