@@ -19,8 +19,8 @@ void main(){
     // outColor = vec4(fragColor, 1);
     if(ambientPerVertex == 1){
         float specular;
-        if(specular_enable == 1) specular = -(min(length(inPosition.xy-eyePos.xy), 1)-1);
-        // if(specular_enable == 1) specular = (4/4) * pow(max(0.0, dot(reflect(-normalize(inPosition - lightPos), normal), normalize(inPosition - eyePos))), 32) / length(lightPos-eyePos);
+        // if(specular_enable == 1) specular = -(min(length(inPosition.xy-eyePos.xy), 1)-1);
+        if(specular_enable == 1) specular = (4/4) * pow(max(0.0, dot(reflect(-normalize(inPosition - lightPos), normal), normalize(inPosition - eyePos))), 32) / length(lightPos-eyePos);
         else specular = 0;
         outColor = specular * vec4(0.5, 0.5, 1.0, 1.0) + 1000 * vec4(fragColor, 1.0) * max(dot(normalize(lightVector), normal), 0.2) * texture(texSampler, fragTexCoord) / (length(lightVector)*length(lightVector));
         // if(dot(reflect(-normalize(inPosition - lightPos), normal), normalize(inPosition - eyePos)) > 0.9) outColor = vec4(1.0, 0.0, 0.0, 1.0);
