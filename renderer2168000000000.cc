@@ -2,13 +2,8 @@
  * Renders stuff.
  */
 
-/** ASSIGNMENT:
- *  TODO: DONE: Generate terrain
- *  TODO: DONE: Specular lighting (blinn-phong)
- *  TODO: DONE: Per-fragment diffuse (toggle)
- *  TODO: DONE: Attenuation
- *  
- * TODO: WARN: INITIAL CAMERA POSITION IS UBO????
+/** TODO:
+ *  Depth of Field
  * */
 
 #include <vulkan/vulkan_core.h>
@@ -224,7 +219,7 @@ private:
         createTextureImage();
         createTextureImageView();
         createTextureSampler();
-        loadModel(); /** TODO: load scene */
+        loadModel();
         generateTerrain(window);
         createVertexBuffer();
         createIndexBuffer();
