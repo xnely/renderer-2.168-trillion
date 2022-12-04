@@ -119,7 +119,7 @@ struct UniformBufferObject {
     alignas(16) glm::vec3 diffuseLightPosition;
     alignas(16) glm::vec3 eyePos;
     alignas(4) float ambient;
-    alignas(4) int ambientPerVertex;
+    // alignas(4) int ambientPerVertex;
     alignas(4) int specular;
 };
 
@@ -1338,9 +1338,8 @@ private:
 
         ubo.diffuseLightPosition = lightPos;
         ubo.eyePos = camera.pos;
-        // ubo.eyePos = glm::vec3(camera.pos.x, -camera.pos.y, camera.pos.z);
         ubo.ambient = 0.2f * toggleKey_1 + 1.f * !toggleKey_1;
-        ubo.ambientPerVertex = toggleKey_4;
+        // ubo.ambientPerVertex = toggleKey_4;
         ubo.specular = toggleKey_5;
 
         void* data;
